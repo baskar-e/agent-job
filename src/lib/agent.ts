@@ -6,6 +6,22 @@ import { scoreJob } from "@/lib/scorer";
 import { sendTelegramAlert } from "@/lib/telegram";
 import { fetchJSearchJobs, JSEARCH_FEED_NAME } from "@/lib/jsearch";
 
+const FRONTEND_KEYWORDS = [
+  "frontend", "front-end", "front end",
+  "react", "nextjs", "next.js", "vue", "angular",
+  "ui developer", "ui engineer", "javascript developer",
+  "typescript developer", "web developer", "web engineer",
+  "software engineer", "software developer",
+];
+
+const EXCLUDED_KEYWORDS = [
+  "product manager", "backend", "back-end", "devops",
+  "data engineer", "data scientist", "machine learning",
+  "qa engineer", "test engineer", "designer", "sales",
+  "recruiter", "hr ", "python developer", "java developer",
+  "ios", "android", "mobile developer", ".net", "ruby",
+];
+
 const parser = new RSSParser({
   headers: {
     "User-Agent": "Mozilla/5.0 (compatible; JobAlertBot/1.0)",
@@ -30,6 +46,19 @@ function isWithinLastDay(dateStr?: string): boolean {
   return posted >= oneDayAgo;
 }
 
+function isFrontendJob(title: string): boolean {
+  const lower = title.toLowerCase();
+
+  // Reject if title contains excluded keywords
+  if (EXCLUDED_KEYWORDS.some((kw) => lower.includes(kw))) return false;
+
+  // Accept if title contains frontend keywords
+  if (FRONTEND_KEYWORDS.some((kw) => lower.includes(kw))) return true;
+
+  // Otherwise let AI decide
+  return true;
+}
+
 // ─── Process a single job item ────────────────────────────────────────────────
 
 async function processJob(
@@ -51,6 +80,12 @@ async function processJob(
   const updatedSeen = addSeen(seenIds, id);
   const jobWithFeed = { ...item, feedName };
   const { score, reason } = await scoreJob(jobWithFeed);
+
+  // Hard filter by title before wasting a Groq API call
+  if (!isFrontendJob(item.title ?? "")) {
+    console.log(`  🚫 Filtered out — ${item.title?.slice(0, 60)}`);
+    return { seenIds: updatedSeen, scoredJob: null, alerted: false };
+  }
 
   const indicator = score >= MIN_SCORE ? "✅" : "⬜";
   console.log(`  ${indicator} ${score}/10 — ${(item.title ?? "Untitled").slice(0, 60)}`);

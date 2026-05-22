@@ -21,9 +21,7 @@ export const FEEDS: FeedConfig[] = [
  
 // JSearch queries — each runs as a separate API call
 export const JSEARCH_QUERIES = [
-  "frontend developer react",
-  "react developer india remote",
-  "frontend engineer typescript india",
+  "frontend developer react india",
 ];
  
 

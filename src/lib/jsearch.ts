@@ -19,6 +19,7 @@ export async function fetchJSearchJobs(query: string): Promise<RawJob[]> {
     num_pages: "1",
     date_posted: "today",     // only jobs posted today
     remote_jobs_only: "false", // include all — we score relevance with AI
+    employment_types: "FULLTIME,CONTRACTOR",
   });
 
   const res = await fetch(`${JSEARCH_BASE}?${params}`, {
@@ -26,6 +27,7 @@ export async function fetchJSearchJobs(query: string): Promise<RawJob[]> {
     headers: {
       "X-RapidAPI-Key": apiKey,
       "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
+      'Content-Type': 'application/json'
     },
   });
 

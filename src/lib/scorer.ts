@@ -20,8 +20,8 @@ export async function scoreJob(
     const groq = getGroq();
     const snippet = (job.contentSnippet ?? job.content ?? "").slice(0, 400);
 
-    const prompt = `You are a job relevance scorer. Score this job listing for the candidate below.
-
+    const prompt = `You are a strict job relevance filter for a frontend developer. 
+    
 Candidate profile:
 ${YOUR_PROFILE}
 
@@ -29,7 +29,16 @@ Job title: ${job.title ?? "Unknown"}
 Job source: ${job.feedName}
 Description: ${snippet}
 
-Respond ONLY with valid JSON — no markdown, no explanation:
+STRICT RULES — score 0 immediately if ANY of these are true:
+- Job title is NOT a frontend/UI role (e.g. product manager, backend, devops, data, QA, sales, HR, designer)
+- Requires more than 5 years of experience
+- Requires technologies completely unrelated to frontend (e.g. only Java, Python, AWS, SQL)
+- Is an internship or entry-level when candidate has 3 years experience
+Score 8-10 only if:
+- Title clearly says frontend, UI, React, Next.js, Vue, Angular, or similar
+- Matches React/TypeScript stack
+- Mid-level or senior level
+Respond ONLY with valid JSON, no markdown:
 {"score": 8, "reason": "Short one-sentence reason"}`;
 
     const response = await groq.chat.completions.create({
